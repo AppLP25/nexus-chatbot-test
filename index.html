@@ -1,76 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Nexus AI Chatbot</title>
+    <title>Nexus AI Minimal Chatbot</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* Optional: Basic styling for the host page */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
             background-color: #f0f2f5;
-        }
-        .container {
-            width: 100%;
-            max-width: 800px; /* Adjust as needed */
-            height: 80vh; /* Adjust as needed */
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            background-color: white;
-            position: relative; /* For positioning the chat widget if needed */
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Nexus AI Jobs</h1>
-        <p>Click the chat icon in the bottom right to start finding jobs!</p>
-    </div>
+    <h1>Minimal Nexus AI Chatbot Test</h1>
+    <p>If the chatbot is working, you will see a chat icon in the bottom right corner.</p>
 
     <!-- Dialogflow Messenger Integration -->
     <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
     <df-messenger
-        project-id="newagent-dovq"  <!-- Your Project ID is now inserted here -->
-        agent-id="28ce30cc-7fd3-4c8a-8bd6-08c9bec5d686"      <!-- This agent ID is correct -->
+        project-id="newagent-dovq"
+        agent-id="28ce30cc-7fd3-4c8a-8bd6-08c9bec5d686"
         language-code="en"
-        max-query-length="-1"
-        chat-title="Nexus Job Assistant"
-        chat-icon="https://placehold.co/40x40/0000FF/FFFFFF?text=AI" <!-- Optional: Custom chat icon -->
-        expand="true" <!-- Optional: Set to true to open chat automatically -->
-        allow-fullscreen="true"
-        allow-feedback="false"
-        enable-history="true"
-        clear-on-exit="false"
-    >
-        <df-messenger-chat-open-icon chat-icon="https://placehold.co/40x40/0000FF/FFFFFF?text=AI"></df-messenger-chat-open-icon>
-        <df-messenger-titlebar
-            title="Nexus Job Assistant"
-            bg-color="#1E40AF"  <!-- Darker blue for title bar -->
-            font-color="#FFFFFF"
-        ></df-messenger-titlebar>
-        <df-messenger-input-text
-            placeholder="Type your job query..."
-            font-color="#333333"
-            bg-color="#F3F4F6"
-            send-icon-color="#1E40AF"
-        ></df-messenger-input-text>
-        <df-messenger-chat
-            bg-color="#F9FAFB"
-            font-color="#333333"
-            user-message-bg-color="#3B82F6"  <!-- Blue for user messages -->
-            user-message-font-color="#FFFFFF"
-            bot-message-bg-color="#E5E7EB"   <!-- Light gray for bot messages -->
-            bot-message-font-color="#374151"
-            border-radius="12px"
-            box-shadow="0 4px 12px rgba(0,0,0,0.1)"
-        ></df-messenger-chat>
-    </df-messenger>
+        chat-title="Nexus Minimal Test"
+    ></df-messenger>
 </body>
 </html>
