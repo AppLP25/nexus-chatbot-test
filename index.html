@@ -1,421 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>Nexus AI Chatbot</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus AI Assistant (Standalone Test)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <style>
+        /* Optional: Basic styling for the host page */
         body {
+            font-family: Arial, sans-serif;
             margin: 0;
-            font-family: "Inter", sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        /* Ensure the app takes full height within its container */
-        #root {
-            min-height: 100vh;
+            padding: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
         }
-        textarea {
-            min-height: 48px; /* Minimum height for textarea */
-        }
-        /* Style for Lucide icons rendered by createIcons */
-        .lucide {
-            display: inline-block; /* Ensure icons behave like text */
-            vertical-align: middle; /* Align with text */
+        .container {
+            width: 100%;
+            max-width: 800px; /* Adjust as needed */
+            height: 80vh; /* Adjust as needed */
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: white;
+            position: relative; /* For positioning the chat widget if needed */
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div class="container">
+        <h1>Welcome to Nexus AI Jobs</h1>
+        <p>Click the chat icon in the bottom right to start finding jobs!</p>
+    </div>
 
-    <script>
-        const { useState, useEffect, useRef } = React;
-
-        function App() {
-            console.log("App component rendering...");
-            const [input, setInput] = useState('');
-            const [chatHistory, setChatHistory] = useState([]);
-            const [loading, setLoading] = useState(false);
-            const [jobData, setJobData] = useState([]);
-            const [dataLoading, setDataLoading] = useState(true);
-            const [dataError, setDataError] = useState(null);
-
-            const chatEndRef = useRef(null);
-
-            // Helper function to format date consistently
-            const formatDate = (dateInput) => {
-                if (!dateInput) return '';
-                let date = new Date(dateInput);
-                if (isNaN(date.getTime()) || String(dateInput).includes('/')) {
-                    const parts = String(dateInput).split('/');
-                    if (parts.length === 3) {
-                        date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                    }
-                }
-                if (isNaN(date.getTime())) return '';
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            };
-
-            const getTomorrowDate = () => {
-                const today = new Date();
-                today.setDate(today.getDate() + 1);
-                return formatDate(today);
-            };
-
-            const getTodayDate = () => {
-                const today = new Date();
-                return formatDate(today);
-            };
-
-            useEffect(() => {
-                console.log("Calculated today's date:", getTodayDate());
-                console.log("Calculated tomorrow's date:", getTomorrowDate());
-
-                const fetchJobData = async () => {
-                    console.log("Attempting to fetch job data from Apps Script...");
-                    try {
-                        // google.script.run is a special Apps Script client-side API
-                        const rawData = await google.script.run
-                            .withFailureHandler(error => {
-                                console.error("Error fetching job data from Apps Script:", error);
-                                setDataError("Failed to load job data. Please check Apps Script deployment and permissions. Error: " + error.message);
-                                setDataLoading(false);
-                            })
-                            .getJobData(); // This calls the getJobData() function in Code.gs
-
-                        console.log("Raw data successfully received from Apps Script:", rawData);
-
-                        if (!Array.isArray(rawData)) {
-                            console.error("Error: Fetched data is not an array.", rawData);
-                            setDataError("Received invalid data format from Google Sheet. Expected an array of objects.");
-                            setDataLoading(false);
-                            return;
-                        }
-
-                        const formattedData = rawData.map((item, index) => {
-                            // Clean and parse rate, handling non-numeric characters
-                            const rawPharmacyRate = String(item.pharmacyrate || '').replace(/[^\d.]/g, '');
-                            const rateValue = parseFloat(rawPharmacyRate) || 0;
-
-                            // Clean and parse approxTotal
-                            const rawApproxTotal = String(item.approxtotal || '').replace(/[^\d.]/g, '');
-                            const approxTotalValue = parseFloat(rawApproxTotal) || 0;
-
-                            const jobDate = formatDate(item.datedetail);
-
-                            const formattedItem = {
-                                date: jobDate,
-                                detail: item.datedetail || '',
-                                postcode: item.postcode || '',
-                                dapopharmacyrateregion: item.dapopharmacyrateregion || '',
-                                rate: rateValue,
-                                jobType: item.jobtype || '',
-                                hours: parseFloat(item.hours) || 0,
-                                approxTotal: approxTotalValue,
-                                dayOfWeek: item.dayofweek || '',
-                                navigationAddress: item.navigationaddress || '',
-                                ukRegion: item.ukregion || ''
-                            };
-                            return formattedItem;
-                        });
-                        setJobData(formattedData);
-                        console.log("Formatted Job Data (First 5 items):");
-                        console.table(formattedData.slice(0, 5));
-                        setChatHistory((prev) => [...prev, { sender: 'ai', text: "Hello! I'm Nexus AI, your job assistant. What are you looking for?" }]);
-                    } catch (error) {
-                        console.error("Error in fetchJobData try-catch block:", error);
-                        setDataError("An unexpected error occurred while processing job data: " + error.message);
-                        setChatHistory((prev) => [...prev, { sender: 'ai', text: "I'm sorry, I couldn't load the job data. Please check the Apps Script for errors." }]);
-                    } finally {
-                        setDataLoading(false);
-                    }
-                };
-
-                // Ensure google.script.run is available before calling
-                if (typeof google !== 'undefined' && google.script && google.script.run) {
-                    fetchJobData();
-                } else {
-                    setDataError("Google Apps Script client-side API (google.script.run) not available. This page must be served by Apps Script.");
-                    setDataLoading(false);
-                    setChatHistory((prev) => [...prev, { sender: 'ai', text: "I'm sorry, I cannot connect to the job data. This test page needs to be served by Google Apps Script to function correctly." }]);
-                    console.error("google.script.run is not defined. This HTML file needs to be part of a Google Apps Script Web App deployment to use google.script.run.");
-                }
-            }, []);
-
-            useEffect(() => {
-                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }, [chatHistory]);
-
-            useEffect(() => {
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-            }, []);
-
-            const handleSendMessage = async () => {
-                if (input.trim() === '') return;
-
-                const userMessage = { sender: 'user', text: input };
-                setChatHistory((prev) => [...prev, userMessage]);
-                setLoading(true);
-                setInput('');
-
-                try {
-                    // Call the Apps Script backend function to talk to Gemini
-                    const rawGeminiResponse = await google.script.run
-                        .withFailureHandler(error => {
-                            console.error("Error calling Gemini API via Apps Script:", error);
-                            setChatHistory((prev) => [...prev, { sender: 'ai', text: "I had trouble understanding your request (Gemini API error). Please try rephrasing it." }]);
-                            setLoading(false);
-                        })
-                        .callGeminiAPI(userMessage.text); // Calls callGeminiAPI(userQuery) in Code.gs
-
-                    console.log("Raw Gemini response from Apps Script:", rawGeminiResponse);
-
-                    let extractedParams = {};
-                    try {
-                        const parsedResponse = JSON.parse(rawGeminiResponse);
-                        if (parsedResponse.error) {
-                          setChatHistory((prev) => [...prev, { sender: 'ai', text: "I couldn't process your request: " + parsedResponse.error }]);
-                          setLoading(false);
-                          return;
-                        }
-                        extractedParams = parsedResponse;
-                        console.log("Parsed Gemini params:", extractedParams);
-                    } catch (parseError) {
-                        console.error("Failed to parse JSON from Apps Script (Gemini response):", parseError);
-                        setChatHistory((prev) => [...prev, { sender: 'ai', text: "I had trouble understanding your request. Please try rephrasing it." }]);
-                        setLoading(false);
-                        return;
-                    }
-
-                    let filteredJobs = jobData;
-
-                    if (extractedParams.date) {
-                        let targetDate = null;
-                        if (extractedParams.date.toLowerCase() === 'tomorrow') {
-                            targetDate = getTomorrowDate();
-                            console.log("Calculated tomorrow's date for filtering:", targetDate);
-                        } else if (extractedParams.date.toLowerCase() === 'today') {
-                            targetDate = getTodayDate();
-                            console.log("Calculated today's date for filtering:", targetDate);
-                        } else {
-                            try {
-                                const dateObj = new Date(extractedParams.date);
-                                if (!isNaN(dateObj.getTime())) {
-                                    targetDate = formatDate(dateObj);
-                                }
-                            } catch (e) {
-                                console.warn("Could not parse date from Gemini:", extractedParams.date);
-                            }
-                        }
-
-                        if (targetDate) {
-                            filteredJobs = filteredJobs.filter(job => job.date === targetDate);
-                            console.log(`Filtering by date: ${targetDate}. Found ${filteredJobs.length} jobs.`);
-                            if (filteredJobs.length > 0) {
-                                console.log("Sample filtered job dates:", filteredJobs.slice(0, 5).map(j => j.date));
-                            }
-                        }
-                    }
-
-                    if (extractedParams.postcode) {
-                        const searchPostcode = extractedParams.postcode.toLowerCase();
-                        filteredJobs = filteredJobs.filter(job =>
-                            job.postcode.toLowerCase().includes(searchPostcode) ||
-                            job.ukregion.toLowerCase().includes(searchPostcode) || // Use ukregion as per your sheet's header cleaning
-                            job.detail.toLowerCase().includes(searchPostcode)
-                        );
-                        console.log(`Filtering by postcode/location: ${searchPostcode}. Found ${filteredJobs.length} jobs.`);
-                    }
-
-                    if (extractedParams.jobType) {
-                        const searchJobType = extractedParams.jobType.toLowerCase();
-                        filteredJobs = filteredJobs.filter(job =>
-                            job.jobtype.toLowerCase().includes(searchJobType) // Use jobtype as per your sheet's header cleaning
-                        );
-                        console.log(`Filtering by job type: ${searchJobType}. Found ${filteredJobs.length} jobs.`);
-                    }
-
-                    let aiResponseText = '';
-                    if (filteredJobs.length > 0) {
-                        aiResponseText = `Here are the jobs I found:\n\n`;
-                        filteredJobs.slice(0, 5).forEach(job => {
-                            aiResponseText += `*Date:* ${job.date || 'N/A'}\n`;
-                            aiResponseText += `*Details:* ${job.detail || 'N/A'}\n`;
-                            aiResponseText += `*Postcode:* ${job.postcode || 'N/A'}\n`;
-                            aiResponseText += `*Job Type:* ${job.jobtype || 'N/A'}\n`; // Use jobtype
-                            aiResponseText += `*Rate:* £${job.rate.toFixed(2)}/hr\n`;
-                            aiResponseText += `*Approx Total:* £${job.approxtotal.toFixed(2)}\n`; // Use approxtotal
-                            aiResponseText += `*UK Region:* ${job.ukregion || 'N/A'}\n\n`; // Use ukregion
-                        });
-                        if (filteredJobs.length > 5) {
-                            aiResponseText += `...and ${filteredJobs.length - 5} more jobs.`;
-                        }
-                        aiResponseText += `I hope this helps! Let me know if you need anything else.`;
-                    } else {
-                        let criteriaMentioned = [];
-                        if (extractedParams.date) criteriaMentioned.push(`date: ${extractedParams.date}`);
-                        if (extractedParams.postcode) criteriaMentioned.push(`location: ${extractedParams.postcode}`);
-                        if (extractedParams.jobType) criteriaMentioned.push(`job type: ${extractedParams.jobType}`);
-
-                        if (criteriaMentioned.length > 0) {
-                            aiResponseText = `I couldn't find any jobs matching your criteria of ${criteriaMentioned.join(' and ')}. Please try a different query or broaden your search.`;
-                        } else {
-                            aiResponseText = `I couldn't find any jobs matching your query. Please try being more specific.`;
-                        }
-                    }
-
-                    setChatHistory((prev) => [...prev, { sender: 'ai', text: aiResponseText }]);
-
-                } catch (error) {
-                    console.error("Error processing request:", error);
-                    setChatHistory((prev) => [...prev, { sender: 'ai', text: "Oops! Something went wrong. Please try again later." }]);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const handleKeyPress = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                }
-            };
-
-            return React.createElement(
-                'div',
-                { className: "min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col font-sans text-gray-800 p-4 sm:p-6" },
-                React.createElement(
-                    'div',
-                    { className: "flex-grow flex flex-col max-w-3xl mx-auto w-full bg-white rounded-xl shadow-lg overflow-hidden" },
-                    // Header
-                    React.createElement(
-                        'div',
-                        { className: "bg-blue-700 text-white p-4 flex items-center justify-center rounded-t-xl shadow-md" },
-                        React.createElement('span', { 'data-lucide': 'message-square-text', className: "w-6 h-6 mr-2" }),
-                        React.createElement('h1', { className: "text-xl font-semibold" }, "Nexus AI Assistant")
-                    ),
-                    // Chat History
-                    React.createElement(
-                        'div',
-                        { className: "flex-grow p-4 sm:p-6 overflow-y-auto space-y-4" },
-                        dataLoading
-                            ? React.createElement(
-                                'div',
-                                { className: "flex justify-center items-center h-full" },
-                                React.createElement('span', { 'data-lucide': 'loader-2', className: "w-8 h-8 animate-spin text-blue-600" }),
-                                React.createElement('span', { className: "ml-2 text-lg" }, "Loading job data...")
-                              )
-                            : dataError
-                                ? React.createElement(
-                                    'div',
-                                    { className: "flex justify-center items-center h-full text-red-600 text-center p-4" },
-                                    React.createElement('p', null, dataError)
-                                  )
-                                : (
-                                    (chatHistory && Array.isArray(chatHistory) ? chatHistory : []).map((message, index) =>
-                                        React.createElement(
-                                            'div',
-                                            {
-                                                key: index,
-                                                className: `flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`
-                                            },
-                                            React.createElement(
-                                                'div',
-                                                {
-                                                    className: `flex items-start max-w-[80%] sm:max-w-[70%] p-3 rounded-lg shadow-sm ${
-                                                        message.sender === 'user'
-                                                            ? 'bg-blue-500 text-white rounded-br-none'
-                                                            : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                                                    }`
-                                                },
-                                                message.sender === 'ai' && React.createElement('span', { 'data-lucide': 'bot', className: "w-5 h-5 mr-2 text-blue-600 flex-shrink-0" }),
-                                                React.createElement('p', { className: "whitespace-pre-wrap text-sm sm:text-base" }, message.text),
-                                                message.sender === 'user' && React.createElement('span', { 'data-lucide': 'user', className: "w-5 h-5 ml-2 text-blue-200 flex-shrink-0" })
-                                            )
-                                        )
-                                    )
-                                ),
-                        loading &&
-                            React.createElement(
-                                'div',
-                                { className: "flex justify-start" },
-                                React.createElement(
-                                    'div',
-                                    { className: "flex items-center bg-gray-100 text-gray-800 p-3 rounded-lg rounded-bl-none shadow-sm" },
-                                    React.createElement('span', { 'data-lucide': 'loader-2', className: "w-5 h-5 mr-2 animate-spin text-blue-600" }),
-                                    React.createElement('span', { className: "text-sm sm:text-base" }, "Thinking...")
-                                )
-                            ),
-                        React.createElement('div', { ref: chatEndRef })
-                    ),
-                    // Input Area
-                    React.createElement(
-                        'div',
-                        { className: "p-4 sm:p-6 bg-gray-50 border-t border-gray-200 flex items-center gap-3" },
-                        React.createElement('textarea', {
-                            className: "flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none text-sm sm:text-base",
-                            placeholder: "Ask about jobs (e.g., 'What jobs have you got tomorrow near me in Edinburgh?')",
-                            value: input,
-                            onChange: (e) => setInput(e.target.value),
-                            onKeyPress: handleKeyPress,
-                            rows: 1,
-                            style: { maxHeight: '100px' },
-                            disabled: dataLoading
-                        }),
-                        React.createElement(
-                            'button',
-                            {
-                                className: "bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-md transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
-                                onClick: handleSendMessage,
-                                disabled: loading || input.trim() === '' || dataLoading
-                            },
-                            loading
-                                ? React.createElement('span', { 'data-lucide': 'loader-2', className: "w-5 h-5 animate-spin" })
-                                : React.createElement('span', { 'data-lucide': 'send', className: "w-5 h-5" })
-                        )
-                    )
-                )
-            );
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOMContentLoaded fired.");
-            const rootElement = document.getElementById('root');
-            if (!rootElement) {
-                console.error("Error: Root element with ID 'root' not found in the DOM.");
-                return;
-            }
-            console.log("Root element found:", rootElement);
-
-            if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
-                console.error("Error: React or ReactDOM not loaded correctly. Please check CDN links.");
-                rootElement.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Error: Core libraries not loaded. Please try refreshing.</div>';
-                return;
-            }
-
-            setTimeout(() => {
-                try {
-                    const root = ReactDOM.createRoot(rootElement);
-                    root.render(React.createElement(App, null));
-                    console.log("React app rendered.");
-                } catch (e) {
-                    console.error("Error rendering React app:", e);
-                    rootElement.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Error rendering application: ${e.message}. Check console for details.</div>`;
-                }
-            }, 100);
-        });
-    </script>
-
+    <!-- Dialogflow Messenger Integration -->
+    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+    <df-messenger
+        project-id="newagent-dovq"  <!-- Your Project ID is now inserted here -->
+        agent-id="28ce30cc-7fd3-4c8a-8bd6-08c9bec5d686"      <!-- This agent ID is correct -->
+        language-code="en"
+        max-query-length="-1"
+        chat-title="Nexus Job Assistant"
+        chat-icon="https://placehold.co/40x40/0000FF/FFFFFF?text=AI" <!-- Optional: Custom chat icon -->
+        expand="true" <!-- Optional: Set to true to open chat automatically -->
+        allow-fullscreen="true"
+        allow-feedback="false"
+        enable-history="true"
+        clear-on-exit="false"
+    >
+        <df-messenger-chat-open-icon chat-icon="https://placehold.co/40x40/0000FF/FFFFFF?text=AI"></df-messenger-chat-open-icon>
+        <df-messenger-titlebar
+            title="Nexus Job Assistant"
+            bg-color="#1E40AF"  <!-- Darker blue for title bar -->
+            font-color="#FFFFFF"
+        ></df-messenger-titlebar>
+        <df-messenger-input-text
+            placeholder="Type your job query..."
+            font-color="#333333"
+            bg-color="#F3F4F6"
+            send-icon-color="#1E40AF"
+        ></df-messenger-input-text>
+        <df-messenger-chat
+            bg-color="#F9FAFB"
+            font-color="#333333"
+            user-message-bg-color="#3B82F6"  <!-- Blue for user messages -->
+            user-message-font-color="#FFFFFF"
+            bot-message-bg-color="#E5E7EB"   <!-- Light gray for bot messages -->
+            bot-message-font-color="#374151"
+            border-radius="12px"
+            box-shadow="0 4px 12px rgba(0,0,0,0.1)"
+        ></df-messenger-chat>
+    </df-messenger>
 </body>
 </html>
