@@ -1,76 +1,243 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Nexus AI Chatbot</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI Direct Dialogflow Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Optional: Basic styling for the host page */
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f0f2f5;
+            margin: 0;
         }
-        .container {
+        .chat-container {
+            max-width: 600px;
             width: 100%;
-            max-width: 800px; /* Adjust as needed */
-            height: 80vh; /* Adjust as needed */
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            margin: 20px;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            background-color: white;
-            position: relative; /* For positioning the chat widget if needed */
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        .user-message {
+            justify-content: flex-end;
+        }
+        .bot-message {
+            justify-content: flex-start;
+        }
+        .message-bubble {
+            max-width: 75%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .user-bubble {
+            background-color: #3b82f6;
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+        .bot-bubble {
+            background-color: #e5e7eb;
+            color: #374151;
+            border-bottom-left-radius: 0.25rem;
+        }
+        .input-area {
+            padding: 1rem 1.5rem;
+            background-color: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .input-area input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-area input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .input-area button {
+            background-color: #2563eb;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .input-area button:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .input-area button:active {
+            transform: translateY(0);
+        }
+        .loading-indicator {
+            display: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .chat-container {
+                margin: 0;
+                border-radius: 0;
+                height: 100vh;
+                max-width: 100vw;
+            }
+            .input-area {
+                flex-direction: column;
+            }
+            .input-area input, .input-area button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Nexus AI Jobs</h1>
-        <p>Click the chat icon in the bottom right to start finding jobs!</p>
+    <div class="chat-container">
+        <div class="bg-blue-600 text-white p-4 text-center text-xl font-bold rounded-t-xl">
+            Nexus AI Direct Test
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <div class="message bot-message">
+                <div class="message-bubble bot-bubble">
+                    Hello! I'm Nexus, your AI assistant. This is a direct test of the Dialogflow API.
+                </div>
+            </div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." class="flex-grow">
+            <button id="send-button">Send</button>
+            <div id="loading-indicator" class="loading-indicator"></div>
+        </div>
     </div>
 
-    <!-- Dialogflow Messenger Integration (Using older bootstrap.js) -->
-    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
-    <df-messenger
-        project-id="newagent-dovq"
-        agent-id="28ce30cc-7fd3-4c8a-8bd6-08c9bec5d686"
-        language-code="en"
-        chat-title="Nexus Job Assistant"
-        expand="true"
-        allow-fullscreen="true"
-        allow-feedback="false"
-        enable-history="true"
-        clear-on-exit="false"
-        <!-- api-version="v2" is not needed with bootstrap.js -->
-        <!-- location="global" is not typically needed with bootstrap.js as it defaults to global for ES -->
-    >
-        <df-messenger-chat-open-icon chat-icon="https://placehold.co/40x40/0000FF/FFFFFF?text=AI"></df-messenger-chat-open-icon>
-        <df-messenger-titlebar
-            title="Nexus Job Assistant"
-            bg-color="#1E40AF"
-            font-color="#FFFFFF"
-        ></df-messenger-titlebar>
-        <df-messenger-input-text
-            placeholder="Type your job query..."
-            font-color="#333333"
-            bg-color="#F3F4F6"
-            send-icon-color="#1E40AF"
-        ></df-messenger-input-text>
-        <df-messenger-chat
-            bg-color="#F9FAFB"
-            font-color="#333333"
-            user-message-bg-color="#3B82F6"
-            user-message-font-color="#FFFFFF"
-            bot-message-bg-color="#E5E7EB"
-            bot-message-font-color="#374151"
-            border-radius="12px"
-            box-shadow="0 4px 12px rgba(0,0,0,0.1)"
-        ></df-messenger-chat>
-    </df-messenger>
+    <script>
+        // IMPORTANT: Your Google Cloud API Key (the one you used for Gemini)
+        // This key will be EXPOSED in the client-side code.
+        // DO NOT USE THIS FOR PRODUCTION. This is for testing connectivity only.
+        const GOOGLE_CLOUD_API_KEY = 'AIzaSyCioKrLSA70LvyhP2YnARoDzoryEgcWwic'; 
+        
+        // Your Dialogflow Project ID
+        const DIALOGFLOW_PROJECT_ID = 'newagent-dovq';
+        // Your Dialogflow Agent ID (often the same as Project ID for ES, but use the specific one)
+        const DIALOGFLOW_AGENT_ID = '28ce30cc-7fd3-4c8a-8bd6-08c9bec5d686';
+        // Dialogflow ES API Endpoint for detectIntent
+        const DIALOGFLOW_API_ENDPOINT = `https://dialogflow.googleapis.com/v2/projects/${DIALOGFLOW_PROJECT_ID}/agent/sessions/test-session-123:detectIntent`;
+
+        const chatMessagesDiv = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', sender === 'user' ? 'user-bubble' : 'bot-bubble');
+            messageBubble.textContent = text;
+            messageDiv.appendChild(messageBubble);
+            chatMessagesDiv.appendChild(messageDiv);
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const userText = userInput.value.trim();
+            if (userText === '') return;
+
+            addMessage(userText, 'user');
+            userInput.value = '';
+            sendButton.disabled = true;
+            loadingIndicator.style.display = 'block';
+
+            try {
+                const requestBody = {
+                    queryInput: {
+                        text: {
+                            text: userText,
+                            languageCode: 'en',
+                        },
+                    },
+                    // Optional: If your agent is in a specific region other than 'global'
+                    // queryParams: {
+                    //     timeZone: 'Europe/London' // Or your agent's timezone
+                    // }
+                };
+
+                const response = await fetch(`${DIALOGFLOW_API_ENDPOINT}?key=${GOOGLE_CLOUD_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Dialogflow API Error Response:", errorData);
+                    throw new Error(`Dialogflow API request failed: ${errorData.error?.message || response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log("Dialogflow API Raw Result:", result);
+
+                const botResponse = result.queryResult.fulfillmentText || "No response from Dialogflow.";
+                addMessage(botResponse, 'bot');
+
+            } catch (error) {
+                console.error("Error communicating with Dialogflow API directly:", error);
+                addMessage(`Error: ${error.message}. Check console for details.`, 'bot');
+            } finally {
+                sendButton.disabled = false;
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        window.onload = () => {
+            userInput.focus();
+        };
+    </script>
 </body>
 </html>
