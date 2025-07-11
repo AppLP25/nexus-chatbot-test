@@ -3,241 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus AI Direct Dialogflow Test</title>
+    <title>Nexus AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             margin: 0;
+            font-family: "Inter", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .chat-container {
-            max-width: 600px;
-            width: 100%;
-            margin: 20px;
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+        #root {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 80vh;
         }
-        .chat-messages {
-            flex-grow: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-            background-color: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
+        textarea {
+            min-height: 48px;
         }
-        .message {
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: flex-start;
-        }
-        .user-message {
-            justify-content: flex-end;
-        }
-        .bot-message {
-            justify-content: flex-start;
-        }
-        .message-bubble {
-            max-width: 75%;
-            padding: 0.75rem 1rem;
-            border-radius: 1.25rem;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-        .user-bubble {
-            background-color: #3b82f6;
-            color: white;
-            border-bottom-right-radius: 0.25rem;
-        }
-        .bot-bubble {
-            background-color: #e5e7eb;
-            color: #374151;
-            border-bottom-left-radius: 0.25rem;
-        }
-        .input-area {
-            padding: 1rem 1.5rem;
-            background-color: #ffffff;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .input-area input {
-            flex-grow: 1;
-            padding: 0.75rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.75rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .input-area input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-        .input-area button {
-            background-color: #2563eb;
-            color: white;
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .input-area button:hover {
-            background-color: #1d4ed8;
-            transform: translateY(-1px);
-        }
-        .input-area button:active {
-            transform: translateY(0);
-        }
-        .loading-indicator {
-            display: none;
-            width: 1.5rem;
-            height: 1.5rem;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 0.5rem;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @media (max-width: 768px) {
-            .chat-container {
-                margin: 0;
-                border-radius: 0;
-                height: 100vh;
-                max-width: 100vw;
-            }
-            .input-area {
-                flex-direction: column;
-            }
-            .input-area input, .input-area button {
-                width: 100%;
-            }
+        .lucide {
+            display: inline-block;
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="bg-blue-600 text-white p-4 text-center text-xl font-bold rounded-t-xl">
-            Nexus AI Direct Test
-        </div>
-        <div id="chat-messages" class="chat-messages">
-            <div class="message bot-message">
-                <div class="message-bubble bot-bubble">
-                    Hello! I'm Nexus, your AI assistant. This is a direct test of the Dialogflow API.
-                </div>
-            </div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Type your message..." class="flex-grow">
-            <button id="send-button">Send</button>
-            <div id="loading-indicator" class="loading-indicator"></div>
-        </div>
-    </div>
+    <div id="root"></div>
 
     <script>
-        // IMPORTANT: Your Google Cloud API Key (the one you used for Gemini)
-        // This key will be EXPOSED in the client-side code.
-        // DO NOT USE THIS FOR PRODUCTION. This is for testing connectivity only.
-        const GOOGLE_CLOUD_API_KEY = 'AIzaSyCioKrLSA70LvyhP2YnARoDzoryEgcWwic'; 
-        
-        // Your Dialogflow Project ID
-        const DIALOGFLOW_PROJECT_ID = 'newagent-dovq';
-        // Your Dialogflow Agent ID (often the same as Project ID for ES, but use the specific one)
-        const DIALOGFLOW_AGENT_ID = '28ce30cc-7fd3-4c8a-8bd6-08c9bec5d686';
-        // Dialogflow ES API Endpoint for detectIntent
-        const DIALOGFLOW_API_ENDPOINT = `https://dialogflow.googleapis.com/v2/projects/${DIALOGFLOW_PROJECT_ID}/agent/sessions/test-session-123:detectIntent`;
+        // IMPORTANT: Replace with the URL of your deployed Google Cloud Function (dialogflow-webhook).
+        // You can find this URL in the Cloud Functions dashboard under the 'Trigger' tab.
+        const CLOUD_FUNCTION_PROXY_URL = 'https://dialogflow-webhook-970105512967.europe-west1.run.app'; // Replace with YOUR function URL
 
-        const chatMessagesDiv = document.getElementById('chat-messages');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const loadingIndicator = document.getElementById('loading-indicator');
+        const { useState, useEffect, useRef } = React;
 
-        function addMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
-            const messageBubble = document.createElement('div');
-            messageBubble.classList.add('message-bubble', sender === 'user' ? 'user-bubble' : 'bot-bubble');
-            messageBubble.textContent = text;
-            messageDiv.appendChild(messageBubble);
-            chatMessagesDiv.appendChild(messageDiv);
-            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-        }
+        function App() {
+            console.log("App component rendering...");
+            const [input, setInput] = useState('');
+            const [chatHistory, setChatHistory] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const chatEndRef = useRef(null);
 
-        async function sendMessage() {
-            const userText = userInput.value.trim();
-            if (userText === '') return;
+            useEffect(() => {
+                setChatHistory([{ sender: 'ai', text: "Hello! I'm Nexus AI, your job assistant. What are you looking for?" }]);
+            }, []);
 
-            addMessage(userText, 'user');
-            userInput.value = '';
-            sendButton.disabled = true;
-            loadingIndicator.style.display = 'block';
+            useEffect(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [chatHistory]);
 
-            try {
-                const requestBody = {
-                    queryInput: {
-                        text: {
-                            text: userText,
-                            languageCode: 'en',
-                        },
-                    },
-                    // Optional: If your agent is in a specific region other than 'global'
-                    // queryParams: {
-                    //     timeZone: 'Europe/London' // Or your agent's timezone
-                    // }
-                };
-
-                const response = await fetch(`${DIALOGFLOW_API_ENDPOINT}?key=${GOOGLE_CLOUD_API_KEY}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("Dialogflow API Error Response:", errorData);
-                    throw new Error(`Dialogflow API request failed: ${errorData.error?.message || response.statusText}`);
+            useEffect(() => {
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
                 }
+            }, []);
 
-                const result = await response.json();
-                console.log("Dialogflow API Raw Result:", result);
+            const handleSendMessage = async () => {
+                if (input.trim() === '') return;
 
-                const botResponse = result.queryResult.fulfillmentText || "No response from Dialogflow.";
-                addMessage(botResponse, 'bot');
+                const userMessage = { sender: 'user', text: input };
+                setChatHistory((prev) => [...prev, userMessage]);
+                setLoading(true);
+                setInput('');
 
-            } catch (error) {
-                console.error("Error communicating with Dialogflow API directly:", error);
-                addMessage(`Error: ${error.message}. Check console for details.`, 'bot');
-            } finally {
-                sendButton.disabled = false;
-                loadingIndicator.style.display = 'none';
+                try {
+                    const response = await fetch(CLOUD_FUNCTION_PROXY_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            user_text: userMessage.text,
+                            session_id: 'web-chat-session-' + Math.random().toString(36).substring(2, 15) // Unique session ID
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error("Cloud Function Proxy Error Response:", errorData);
+                        throw new Error(`Proxy request failed: ${errorData.error || response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log("Proxy Response:", result);
+
+                    const botResponse = result.response || "No response from AI.";
+                    addMessage(botResponse, 'ai');
+
+                } catch (error) {
+                    console.error("Error communicating with Cloud Function Proxy:", error);
+                    addMessage(`Error: ${error.message}. Please try again later.`, 'ai');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            };
+
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+                const messageBubble = document.createElement('div');
+                messageBubble.classList.add('message-bubble', sender === 'user' ? 'user-bubble' : 'bot-bubble');
+                messageBubble.textContent = text;
+                messageDiv.appendChild(messageBubble);
+                chatMessagesDiv.appendChild(messageDiv);
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
             }
+
+            const chatMessagesDiv = document.getElementById('chat-messages');
+
+            return React.createElement(
+                'div',
+                { className: "min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col font-sans text-gray-800 p-4 sm:p-6" },
+                React.createElement(
+                    'div',
+                    { className: "flex-grow flex flex-col max-w-3xl mx-auto w-full bg-white rounded-xl shadow-lg overflow-hidden" },
+                    // Header
+                    React.createElement(
+                        'div',
+                        { className: "bg-blue-700 text-white p-4 flex items-center justify-center rounded-t-xl shadow-md" },
+                        React.createElement('span', { 'data-lucide': 'message-square-text', className: "w-6 h-6 mr-2" }),
+                        React.createElement('h1', { className: "text-xl font-semibold" }, "Nexus AI Assistant")
+                    ),
+                    // Chat History
+                    React.createElement(
+                        'div',
+                        { className: "flex-grow p-4 sm:p-6 overflow-y-auto space-y-4", id: "chat-messages" },
+                        (chatHistory && Array.isArray(chatHistory) ? chatHistory : []).map((message, index) =>
+                            React.createElement(
+                                'div',
+                                {
+                                    key: index,
+                                    className: `flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`
+                                },
+                                React.createElement(
+                                    'div',
+                                    {
+                                        className: `flex items-start max-w-[80%] sm:max-w-[70%] p-3 rounded-lg shadow-sm ${
+                                            message.sender === 'user'
+                                                ? 'bg-blue-500 text-white rounded-br-none'
+                                                : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                        }`
+                                    },
+                                    message.sender === 'ai' && React.createElement('span', { 'data-lucide': 'bot', className: "w-5 h-5 mr-2 text-blue-600 flex-shrink-0" }),
+                                    React.createElement('p', { className: "whitespace-pre-wrap text-sm sm:text-base" }, message.text),
+                                    message.sender === 'user' && React.createElement('span', { 'data-lucide': 'user', className: "w-5 h-5 ml-2 text-blue-200 flex-shrink-0" })
+                                )
+                            )
+                        ),
+                        loading &&
+                            React.createElement(
+                                'div',
+                                { className: "flex justify-start" },
+                                React.createElement(
+                                    'div',
+                                    { className: "flex items-center bg-gray-100 text-gray-800 p-3 rounded-lg rounded-bl-none shadow-sm" },
+                                    React.createElement('span', { 'data-lucide': 'loader-2', className: "w-5 h-5 mr-2 animate-spin text-blue-600" }),
+                                    React.createElement('span', { className: "text-sm sm:text-base" }, "Thinking...")
+                                )
+                            ),
+                        React.createElement('div', { ref: chatEndRef })
+                    ),
+                    // Input Area
+                    React.createElement(
+                        'div',
+                        { className: "p-4 sm:p-6 bg-gray-50 border-t border-gray-200 flex items-center gap-3" },
+                        React.createElement('input', {
+                            type: "text",
+                            id: "user-input",
+                            className: "flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm sm:text-base",
+                            placeholder: "Ask about jobs (e.g., 'What jobs have you got tomorrow near me in Edinburgh?')",
+                            value: input,
+                            onChange: (e) => setInput(e.target.value),
+                            onKeyPress: handleKeyPress,
+                            disabled: loading
+                        }),
+                        React.createElement(
+                            'button',
+                            {
+                                id: "send-button",
+                                className: "bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-md transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
+                                onClick: handleSendMessage,
+                                disabled: loading || input.trim() === ''
+                            },
+                            loading
+                                ? React.createElement('span', { 'data-lucide': 'loader-2', className: "w-5 h-5 animate-spin" })
+                                : React.createElement('span', { 'data-lucide': 'send', className: "w-5 h-5" })
+                        )
+                    )
+                )
+            );
         }
 
-        sendButton.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOMContentLoaded fired.");
+            const rootElement = document.getElementById('root');
+            if (!rootElement) {
+                console.error("Error: Root element with ID 'root' not found in the DOM.");
+                return;
             }
-        });
+            console.log("Root element found:", rootElement);
 
-        window.onload = () => {
-            userInput.focus();
-        };
+            if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
+                console.error("Error: React or ReactDOM not loaded correctly. Please check CDN links.");
+                rootElement.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Error: Core libraries not loaded. Please try refreshing.</div>';
+                return;
+            }
+
+            setTimeout(() => {
+                try {
+                    const root = ReactDOM.createRoot(rootElement);
+                    root.render(React.createElement(App, null));
+                    console.log("React app rendered.");
+                } catch (e) {
+                    console.error("Error rendering React app:", e);
+                    rootElement.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Error rendering application: ${e.message}. Check console for details.</div>`;
+            }
+        }, 100);
+    });
     </script>
 </body>
 </html>
