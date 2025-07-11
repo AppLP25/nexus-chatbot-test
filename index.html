@@ -34,22 +34,20 @@
         <p>Click the chat icon in the bottom right to start finding jobs!</p>
     </div>
 
-    <!-- Dialogflow Messenger Integration -->
-    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+    <!-- Dialogflow Messenger Integration (Using older bootstrap.js) -->
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
     <df-messenger
         project-id="newagent-dovq"
         agent-id="28ce30cc-7fd3-4c8a-8bd6-08c9bec5d686"
         language-code="en"
-        max-query-length="-1"
         chat-title="Nexus Job Assistant"
-        chat-icon="https://placehold.co/40x40/0000FF/FFFFFF?text=AI"
         expand="true"
         allow-fullscreen="true"
         allow-feedback="false"
         enable-history="true"
         clear-on-exit="false"
-        api-version="v2"
-        location="global" <!-- NEW: Explicitly setting location to global -->
+        <!-- api-version="v2" is not needed with bootstrap.js -->
+        <!-- location="global" is not typically needed with bootstrap.js as it defaults to global for ES -->
     >
         <df-messenger-chat-open-icon chat-icon="https://placehold.co/40x40/0000FF/FFFFFF?text=AI"></df-messenger-chat-open-icon>
         <df-messenger-titlebar
