@@ -112,7 +112,14 @@
                 messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
                 const messageBubble = document.createElement('div');
                 messageBubble.classList.add('message-bubble', sender === 'user' ? 'user-bubble' : 'bot-bubble');
-                messageBubble.textContent = text;
+                
+                // FIX: Use dangerouslySetInnerHTML to render HTML from newlines
+                if (sender === 'ai') {
+                    messageBubble.innerHTML = text.replace(/\n/g, '<br />'); // Convert newlines to <br> tags
+                } else {
+                    messageBubble.textContent = text;
+                }
+                
                 messageDiv.appendChild(messageBubble);
                 chatMessagesDiv.appendChild(messageDiv);
                 chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
@@ -154,7 +161,10 @@
                                         }`
                                     },
                                     message.sender === 'ai' && React.createElement('span', { 'data-lucide': 'bot', className: "w-5 h-5 mr-2 text-blue-600 flex-shrink-0" }),
-                                    React.createElement('p', { className: "whitespace-pre-wrap text-sm sm:text-base" }, message.text),
+                                    // Render HTML if from AI, otherwise plain text
+                                    message.sender === 'ai'
+                                        ? React.createElement('p', { className: "whitespace-pre-wrap text-sm sm:text-base", dangerouslySetInnerHTML: { __html: message.text.replace(/\n/g, '<br />') } })
+                                        : React.createElement('p', { className: "whitespace-pre-wrap text-sm sm:text-base" }, message.text),
                                     message.sender === 'user' && React.createElement('span', { 'data-lucide': 'user', className: "w-5 h-5 ml-2 text-blue-200 flex-shrink-0" })
                                 )
                             )
@@ -226,9 +236,9 @@
                 } catch (e) {
                     console.error("Error rendering React app:", e);
                     rootElement.innerHTML = `<div style="text-align: center; padding: 20px; color: red;">Error rendering application: ${e.message}. Check console for details.</div>`;
-            }
-        }, 100);
-    });
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>
